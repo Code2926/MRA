@@ -422,62 +422,159 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* LOW STOCK FULL WIDTH */}
-      <div
-        className="
-          p-6 rounded-3xl
-          border border-gray-200 dark:border-white/10
-          bg-gray-50 dark:bg-[#0a0a0a]
-        "
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-bold">Low Stock</h2>
+      {/* LOW STOCK - PREMIUM MATCHING DESIGN */}
+<motion.div
+  initial={{ opacity: 0, y: 15 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.3 }}
+  className="
+    relative overflow-hidden
+    rounded-[32px]
+    border border-black/10 dark:border-white/10
+    bg-white/80 dark:bg-[#0a0a0a]/90
+    backdrop-blur-xl
+    p-5
+    shadow-2xl shadow-black/5
+  "
+>
+  {/* BACKGROUND GLOW */}
+  <div className="absolute inset-0 bg-gradient-to-r from-red-500/[0.03] via-orange-500/[0.03] to-yellow-500/[0.03] pointer-events-none" />
 
-          <span className="text-sm text-red-500 font-semibold">
-            {lowStockItems.length} Items
-          </span>
-        </div>
+  {/* ORB EFFECT */}
+  <div className="absolute -top-20 -left-20 h-60 w-60 bg-red-500/10 blur-3xl" />
+  <div className="absolute -bottom-20 -right-20 h-60 w-60 bg-orange-500/10 blur-3xl" />
 
-        {lowStockItems.length === 0 ? (
-          <p className="text-gray-500 dark:text-white/50">
-            No low stock items
-          </p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {lowStockItems.map((item) => (
-              <motion.div
-                key={item.id}
-                whileHover={{ scale: 1.01 }}
-                className="
-                  p-4 rounded-2xl
-                  bg-red-500/5
-                  border border-red-500/10
-                  flex items-center justify-between gap-4
-                  transition-all duration-300
-                "
-              >
-                {/* LEFT SIDE */}
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-black dark:text-white truncate">
-                    {item.product_name}
-                  </p>
+  {/* HEADER */}
+  <div className="relative flex items-center justify-between mb-5">
+    
+    <div className="flex items-center gap-3">
 
-                  <p className="text-sm text-gray-500 dark:text-white/50 truncate">
-                    {item.bike_type} • {item.model || "Standard"}
-                  </p>
-                </div>
+      <div className="
+        h-14 w-14 rounded-3xl
+        bg-gradient-to-br from-red-500/20 to-orange-500/20
+        text-red-500
+        flex items-center justify-center
+        text-2xl
+        shadow-lg shadow-red-500/10
+        border border-red-500/10
+      ">
+        <FaExclamationTriangle />
+      </div>
 
-                {/* RIGHT SIDE */}
-                <div className="shrink-0 text-right">
-                  <p className="text-xs text-gray-500 dark:text-white/40">
-                    Stock
-                  </p>
+      <div>
+        <h2 className="text-2xl font-black tracking-tight">
+          Low Stock
+        </h2>
 
-                  <p className="text-lg font-black text-red-500">
-                    {item.stock}
-                  </p>
-                </div>
-              </motion.div>
+        <p className="text-xs text-gray-500 dark:text-white/40">
+          Products requiring attention
+        </p>
+      </div>
+
+    </div>
+
+    <span className="
+      px-4 py-2 rounded-2xl
+      bg-red-500/10
+      text-red-500
+      text-sm font-bold
+      border border-red-500/10
+    ">
+      {lowStockItems.length} Items
+    </span>
+
+  </div>
+
+  {/* CONTENT */}
+  {lowStockItems.length === 0 ? (
+    
+    <div className="
+      relative rounded-3xl
+      border border-dashed border-black/10 dark:border-white/10
+      p-10 text-center
+      bg-gray-50 dark:bg-white/[0.02]
+    ">
+      <FaBox className="mx-auto text-4xl text-gray-400 mb-4" />
+
+      <h3 className="font-bold text-lg">
+        Everything Looks Good
+      </h3>
+
+      <p className="text-sm text-gray-500 dark:text-white/50 mt-2">
+        No low stock products found
+      </p>
+    </div>
+
+  ) : (
+
+    <div className="relative grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      {lowStockItems.map((item) => (
+
+        <motion.div
+          key={item.id}
+          whileHover={{ y: -3 }}
+          className="
+            rounded-3xl p-5
+            border border-red-500/10
+            bg-red-500/[0.04]
+            hover:bg-red-500/[0.06]
+            transition-all duration-300
+          "
+        >
+          <div className="flex justify-between items-start gap-4">
+
+            {/* LEFT */}
+            <div className="min-w-0 flex-1">
+
+              <h3 className="font-black text-lg break-words">
+                {item.product_name}
+              </h3>
+
+              <div className="flex flex-wrap gap-2 mt-3">
+
+                <span className="
+                  px-3 py-1 rounded-full
+                  text-xs font-bold
+                  bg-blue-500/10 text-blue-500
+                ">
+                  {item.bike_type}
+                </span>
+
+                <span className="
+                  px-3 py-1 rounded-full
+                  text-xs font-bold
+                  bg-green-500/10 text-green-500
+                ">
+                  {item.model || "Standard"}
+                </span>
+
+              </div>
+
+            </div>
+
+            {/* RIGHT */}
+            <div className="shrink-0 text-right">
+
+              <p className="text-xs text-gray-500 dark:text-white/40 mb-1">
+                Stock
+              </p>
+
+              <p className="text-3xl font-black text-red-500">
+                {item.stock}
+              </p>
+
+            </div>
+
+          </div>
+        </motion.div>
+
+      ))}
+
+    </div>
+
+  )}
+</motion.div>
             ))}
           </div>
         )}
