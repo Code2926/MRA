@@ -354,7 +354,8 @@ export default function Bill() {
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+        {/* CHANGED TO 2 COLUMNS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredProducts.map((p) => {
             const lowStock = p.stock <= 5;
 
@@ -363,19 +364,19 @@ export default function Bill() {
                 key={p.id}
                 whileHover={{ y: -4 }}
                 onClick={() => addToCart(p)}
-                className={`cursor-pointer rounded-3xl p-5 border transition-all duration-300 ${
+                className={`cursor-pointer rounded-3xl p-6 border transition-all duration-300 ${
                   lowStock
                     ? "border-red-500/20 bg-red-500/[0.05]"
                     : "border-black/10 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03]"
                 }`}
               >
-                <div className="flex justify-between items-start">
-                  <div className="min-w-0">
-                    <h3 className="font-black text-lg break-words">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-black text-2xl break-words">
                       {p.product_name}
                     </h3>
 
-                    <div className="flex flex-wrap gap-2 mt-3">
+                    <div className="flex flex-wrap gap-2 mt-4">
                       <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-500">
                         {p.bike_type}
                       </span>
@@ -391,19 +392,19 @@ export default function Bill() {
                   </div>
 
                   {lowStock && (
-                    <div className="text-red-500 text-lg">
+                    <div className="text-red-500 text-xl flex-shrink-0">
                       <FaExclamationTriangle />
                     </div>
                   )}
                 </div>
 
-                <div className="mt-5 flex justify-between items-center">
+                <div className="mt-6 flex justify-between items-center">
                   <span className="text-sm text-gray-500 dark:text-white/50">
                     Available Stock
                   </span>
 
                   <span
-                    className={`text-xl font-black ${
+                    className={`text-2xl font-black ${
                       lowStock ? "text-red-500" : "text-green-500"
                     }`}
                   >
@@ -452,7 +453,7 @@ export default function Bill() {
               </p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-2 xl:grid-cols-2 gap-4">
               {cart.map((item) => {
                 const isOut = item.quantity > item.stock;
 
@@ -469,7 +470,7 @@ export default function Bill() {
                     {/* TOP */}
                     <div className="flex justify-between gap-4">
                       <div className="min-w-0">
-                        <h3 className="font-black break-words">
+                        <h3 className="font-black break-words text-lg">
                           {item.product_name}
                         </h3>
 
