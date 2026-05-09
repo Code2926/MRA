@@ -19,12 +19,10 @@ export default function Inventory() {
   const [inputs, setInputs] = useState({});
   const [search, setSearch] = useState("");
 
-  /* SEARCH + FILTERS */
   const [bikeFilter, setBikeFilter] = useState("");
   const [qualityFilter, setQualityFilter] = useState("");
   const [modelFilter, setModelFilter] = useState("");
 
-  /* FORMAT NUMBERS */
   const formatNumber = (num) => {
     const value = Number(num) || 0;
 
@@ -34,20 +32,10 @@ export default function Inventory() {
     return value;
   };
 
-  /* UNIQUE FILTER OPTIONS (FIXED: items not products) */
-  const bikeTypes = [
-    ...new Set(items.map((p) => p.bike_type).filter(Boolean)),
-  ];
+  const bikeTypes = [...new Set(items.map((p) => p.bike_type).filter(Boolean))];
+  const qualities = [...new Set(items.map((p) => p.quality).filter(Boolean))];
+  const models = [...new Set(items.map((p) => p.model).filter(Boolean))];
 
-  const qualities = [
-    ...new Set(items.map((p) => p.quality).filter(Boolean)),
-  ];
-
-  const models = [
-    ...new Set(items.map((p) => p.model).filter(Boolean)),
-  ];
-
-  /* FILTER PRODUCTS (FIXED: items not products) */
   const filteredItems = useMemo(() => {
     return items.filter((p) => {
       const matchesSearch = `${p.product_name} ${p.bike_type} ${
@@ -64,7 +52,6 @@ export default function Inventory() {
     });
   }, [items, search, bikeFilter, qualityFilter, modelFilter]);
 
-  /* FETCH PRODUCTS */
   const fetchItems = async () => {
     setLoading(true);
 
@@ -89,11 +76,7 @@ export default function Inventory() {
       .channel("products-realtime")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "products",
-        },
+        { event: "*", schema: "public", table: "products" },
         () => fetchItems()
       )
       .subscribe();
@@ -103,7 +86,6 @@ export default function Inventory() {
     };
   }, []);
 
-  /* UPDATE STOCK */
   const updateStock = async (id, newStock) => {
     if (newStock < 0) return;
 
@@ -115,7 +97,6 @@ export default function Inventory() {
     if (error) toast.error("Stock update failed");
   };
 
-  /* ADD STOCK */
   const addStock = async (item) => {
     const value = parseInt(inputs[item.id] || 0);
 
@@ -129,7 +110,6 @@ export default function Inventory() {
     setInputs({ ...inputs, [item.id]: "" });
   };
 
-  /* DEDUCT STOCK */
   const deductStock = async (item) => {
     const value = parseInt(inputs[item.id] || 0);
 
@@ -159,7 +139,6 @@ export default function Inventory() {
 
       {/* HEADER */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-
         <div>
           <h1 className="text-4xl font-black">Inventory</h1>
           <p className="text-gray-500 dark:text-white/50 text-sm mt-1">
@@ -168,7 +147,7 @@ export default function Inventory() {
         </div>
       </div>
 
-      {/* SUMMARY */}
+      {/* SUMMARY GRID */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
 
         {/* CARD 1 */}
@@ -200,133 +179,125 @@ export default function Inventory() {
           <FaExclamationTriangle className="text-red-500 text-3xl" />
         </motion.div>
 
-      </div>
+        {/* FIXED: SEARCH + FILTER BAR */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="col-span-full relative overflow-hidden rounded-[32px] border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#0a0a0a]/90 backdrop-blur-xl p-5 shadow-2xl shadow-black/5"
+        >
+          {/* GLOW */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/[0.03] via-purple-500/[0.03] to-cyan-500/[0.03] pointer-events-none" />
 
-      {/* PREMIUM SEARCH + FILTER BAR - FULL WIDTH */}
-      <motion.div
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="col-span-full xl:col-span-3 relative overflow-hidden rounded-[32px] border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#0a0a0a]/90 backdrop-blur-xl p-5 shadow-2xl shadow-black/5"
-      >
-        {/* GLOW */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/[0.03] via-purple-500/[0.03] to-cyan-500/[0.03] pointer-events-none" />
+          {/* TOP */}
+          <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
+            <div className="flex items-center gap-3">
+              <div className="h-14 w-14 rounded-3xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-500 flex items-center justify-center text-2xl shadow-lg shadow-blue-500/10 border border-blue-500/10">
+                <FaFilter />
+              </div>
 
-        {/* TOP */}
-        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
-          <div className="flex items-center gap-3">
-            <div className="h-14 w-14 rounded-3xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-500 flex items-center justify-center text-2xl shadow-lg shadow-blue-500/10 border border-blue-500/10">
-              <FaFilter />
+              <div>
+                <h3 className="text-2xl font-black tracking-tight">
+                  Search & Filters
+                </h3>
+              </div>
             </div>
 
-            <div>
-              <h3 className="text-2xl font-black tracking-tight">
-                Search & Filters
-              </h3>
-            </div>
+            <button
+              onClick={() => {
+                setSearch("");
+                setBikeFilter("");
+                setQualityFilter("");
+                setModelFilter("");
+              }}
+              className="px-5 py-3 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold text-sm transition-all duration-300 border border-red-500/10 hover:scale-[1.02]"
+            >
+              Clear Filters
+            </button>
           </div>
 
-          {/* CLEAR FILTERS */}
-          <button
-            onClick={() => {
-              setSearch("");
-              setBikeFilter("");
-              setQualityFilter("");
-              setModelFilter("");
-            }}
-            className="px-5 py-3 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold text-sm transition-all duration-300 border border-red-500/10 hover:scale-[1.02]"
-          >
-            Clear Filters
-          </button>
-        </div>
+          {/* FILTER GRID */}
+          <div className="relative grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            
+            {/* SEARCH */}
+            <div className="group flex items-center gap-3 px-5 py-4 rounded-3xl border border-black/10 dark:border-white/10 bg-gray-100/80 dark:bg-white/[0.03] focus-within:border-blue-500/40 focus-within:shadow-lg focus-within:shadow-blue-500/10 transition-all duration-300">
+              <div className="h-11 w-11 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-lg group-focus-within:scale-110 transition-all duration-300">
+                <FaSearch />
+              </div>
 
-        {/* FILTER GRID */}
-        <div className="relative grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {/* SEARCH */}
-          <div className="group flex items-center gap-3 px-5 py-4 rounded-3xl border border-black/10 dark:border-white/10 bg-gray-100/80 dark:bg-white/[0.03] focus-within:border-blue-500/40 focus-within:shadow-lg focus-within:shadow-blue-500/10 transition-all duration-300">
-            <div className="h-11 w-11 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-lg group-focus-within:scale-110 transition-all duration-300">
-              <FaSearch />
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 dark:text-white/40 mb-1">
+                  Search Product
+                </p>
+
+                <input
+                  type="text"
+                  placeholder="Type product name..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="bg-transparent outline-none w-full text-sm font-medium placeholder:text-gray-400"
+                />
+              </div>
             </div>
 
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 dark:text-white/40 mb-1">
-                Search Product
+            {/* BIKE TYPE */}
+            <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-gray-100/80 dark:bg-white/[0.03] px-5 py-4">
+              <p className="text-xs text-gray-500 dark:text-white/40 mb-2">
+                Bike Type
               </p>
 
-              <input
-                type="text"
-                placeholder="Type product name..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="bg-transparent outline-none w-full text-sm font-medium placeholder:text-gray-400"
-              />
+              <select
+                value={bikeFilter}
+                onChange={(e) => setBikeFilter(e.target.value)}
+                className="bg-transparent outline-none w-full text-sm font-semibold"
+              >
+                <option value="">All Bike Types</option>
+                {bikeTypes.map((type, index) => (
+                  <option key={index} value={type}>{type}</option>
+                ))}
+              </select>
             </div>
+
+            {/* QUALITY */}
+            <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-gray-100/80 dark:bg-white/[0.03] px-5 py-4">
+              <p className="text-xs text-gray-500 dark:text-white/40 mb-2">
+                Product Quality
+              </p>
+
+              <select
+                value={qualityFilter}
+                onChange={(e) => setQualityFilter(e.target.value)}
+                className="bg-transparent outline-none w-full text-sm font-semibold"
+              >
+                <option value="">All Qualities</option>
+                {qualities.map((quality, index) => (
+                  <option key={index} value={quality}>{quality}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* MODEL */}
+            <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-gray-100/80 dark:bg-white/[0.03] px-5 py-4">
+              <p className="text-xs text-gray-500 dark:text-white/40 mb-2">
+                Product Model
+              </p>
+
+              <select
+                value={modelFilter}
+                onChange={(e) => setModelFilter(e.target.value)}
+                className="bg-transparent outline-none w-full text-sm font-semibold"
+              >
+                <option value="">All Models</option>
+                {models.map((model, index) => (
+                  <option key={index} value={model}>{model}</option>
+                ))}
+              </select>
+            </div>
+
           </div>
+        </motion.div>
 
-          {/* BIKE TYPE */}
-          <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-gray-100/80 dark:bg-white/[0.03] px-5 py-4 transition-all duration-300 hover:border-blue-500/20">
-            <p className="text-xs text-gray-500 dark:text-white/40 mb-2">
-              Bike Type
-            </p>
-
-            <select
-              value={bikeFilter}
-              onChange={(e) => setBikeFilter(e.target.value)}
-              className="bg-transparent outline-none w-full text-sm font-semibold"
-            >
-              <option value="">All Bike Types</option>
-
-              {bikeTypes.map((type, index) => (
-                <option key={index} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* QUALITY */}
-          <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-gray-100/80 dark:bg-white/[0.03] px-5 py-4 transition-all duration-300 hover:border-yellow-500/20">
-            <p className="text-xs text-gray-500 dark:text-white/40 mb-2">
-              Product Quality
-            </p>
-
-            <select
-              value={qualityFilter}
-              onChange={(e) => setQualityFilter(e.target.value)}
-              className="bg-transparent outline-none w-full text-sm font-semibold"
-            >
-              <option value="">All Qualities</option>
-
-              {qualities.map((quality, index) => (
-                <option key={index} value={quality}>
-                  {quality}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* MODEL */}
-          <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-gray-100/80 dark:bg-white/[0.03] px-5 py-4 transition-all duration-300 hover:border-green-500/20">
-            <p className="text-xs text-gray-500 dark:text-white/40 mb-2">
-              Product Model
-            </p>
-
-            <select
-              value={modelFilter}
-              onChange={(e) => setModelFilter(e.target.value)}
-              className="bg-transparent outline-none w-full text-sm font-semibold"
-            >
-              <option value="">All Models</option>
-
-              {models.map((model, index) => (
-                <option key={index} value={model}>
-                  {model}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </motion.div>
+      </div>
 
       {/* ITEMS */}
       {loading ? (
@@ -351,7 +322,6 @@ export default function Inventory() {
                     : "border-black/10 dark:border-white/10"
                 }`}
               >
-
                 <h2 className="font-black text-xl">{item.product_name}</h2>
 
                 <div className="flex gap-2 mt-2 text-xs">
@@ -360,25 +330,19 @@ export default function Inventory() {
                   <span className="text-green-500">{item.model}</span>
                 </div>
 
-                <div className="text-2xl font-black mt-3">
-                  {item.stock}
-                </div>
+                <div className="text-2xl font-black mt-3">{item.stock}</div>
 
                 <input
                   type="number"
                   value={inputs[item.id] || ""}
                   onChange={(e) =>
-                    setInputs({
-                      ...inputs,
-                      [item.id]: e.target.value,
-                    })
+                    setInputs({ ...inputs, [item.id]: e.target.value })
                   }
                   className="w-full mt-4 p-3 rounded-xl bg-gray-100 dark:bg-black/30"
                   placeholder="Qty"
                 />
 
                 <div className="flex gap-3 mt-4">
-
                   <button
                     onClick={() => addStock(item)}
                     className="flex-1 bg-green-500 py-2 rounded-xl flex items-center justify-center gap-2"
@@ -392,9 +356,7 @@ export default function Inventory() {
                   >
                     <FaArrowDown /> Deduct
                   </button>
-
                 </div>
-
               </motion.div>
             );
           })}
