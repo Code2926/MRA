@@ -24,6 +24,70 @@ export default function Inventory() {
   const [qualityFilter, setQualityFilter] = useState("");
   const [modelFilter, setModelFilter] = useState("");
 
+  /* FORMAT NUMBERS */
+  const formatNumber = (num) => {
+    const value = Number(num) || 0;
+
+    if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M`;
+    }
+
+    if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}K`;
+    }
+
+    return value;
+  };
+
+  /* UNIQUE FILTER OPTIONS */
+  const bikeTypes = [
+    ...new Set(products.map((p) => p.bike_type).filter(Boolean)),
+  ];
+
+  const qualities = [
+    ...new Set(products.map((p) => p.quality).filter(Boolean)),
+  ];
+
+  const models = [
+    ...new Set(products.map((p) => p.model).filter(Boolean)),
+  ];
+
+  /* FILTER PRODUCTS */
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      const matchesSearch = `${p.product_name} ${p.bike_type} ${
+        p.quality
+      } ${p.model || ""}`
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchesBike = bikeFilter
+        ? p.bike_type === bikeFilter
+        : true;
+
+      const matchesQuality = qualityFilter
+        ? p.quality === qualityFilter
+        : true;
+
+      const matchesModel = modelFilter
+        ? p.model === modelFilter
+        : true;
+
+      return (
+        matchesSearch &&
+        matchesBike &&
+        matchesQuality &&
+        matchesModel
+      );
+    });
+  }, [
+    products,
+    search,
+    bikeFilter,
+    qualityFilter,
+    modelFilter,
+  ]);
+
   /* FETCH PRODUCTS */
   const fetchItems = async () => {
     setLoading(true);
