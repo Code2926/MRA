@@ -22,13 +22,6 @@ export default function Bill() {
   const [settings, setSettings] = useState(null);
   const [search, setSearch] = useState("");
 
-  /* FILTER STATES */
-  const [filters, setFilters] = useState({
-    bike_type: "",
-    quality: "",
-    model: "",
-  });
-
   /* FETCH PRODUCTS */
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -76,48 +69,14 @@ export default function Bill() {
     return value;
   };
 
-  /* UNIQUE FILTER OPTIONS */
-  const bikeTypes = [
-    ...new Set(products.map((p) => p.bike_type).filter(Boolean)),
-  ];
-
-  const qualities = [
-    ...new Set(products.map((p) => p.quality).filter(Boolean)),
-  ];
-
-  const models = [
-    ...new Set(products.map((p) => p.model).filter(Boolean)),
-  ];
-
   /* FILTER PRODUCTS */
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
-      const matchesSearch = `${p.product_name} ${p.bike_type} ${
-        p.quality
-      } ${p.model || ""}`
+    return products.filter((p) =>
+      `${p.product_name} ${p.bike_type} ${p.quality} ${p.model || ""}`
         .toLowerCase()
-        .includes(search.toLowerCase());
-
-      const matchesBikeType = filters.bike_type
-        ? p.bike_type === filters.bike_type
-        : true;
-
-      const matchesQuality = filters.quality
-        ? p.quality === filters.quality
-        : true;
-
-      const matchesModel = filters.model
-        ? p.model === filters.model
-        : true;
-
-      return (
-        matchesSearch &&
-        matchesBikeType &&
-        matchesQuality &&
-        matchesModel
-      );
-    });
-  }, [products, search, filters]);
+        .includes(search.toLowerCase())
+    );
+  }, [products, search]);
 
   /* ADD TO CART */
   const addToCart = (product) => {
@@ -302,80 +261,17 @@ export default function Bill() {
           </p>
         </div>
 
-        {/* SEARCH + FILTERS */}
-        <div className="flex flex-col lg:flex-row gap-3 w-full lg:w-auto">
-          {/* SEARCH */}
-          <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#0a0a0a] w-full lg:w-[320px]">
-            <FaSearch className="text-gray-400" />
+        {/* SEARCH */}
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#0a0a0a] w-full lg:w-[320px]">
+          <FaSearch className="text-gray-400" />
 
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="bg-transparent outline-none w-full text-sm placeholder:text-gray-400"
-            />
-          </div>
-
-          {/* BIKE TYPE FILTER */}
-          <select
-            value={filters.bike_type}
-            onChange={(e) =>
-              setFilters({
-                ...filters,
-                bike_type: e.target.value,
-              })
-            }
-            className="px-4 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#0a0a0a] outline-none text-sm"
-          >
-            <option value="">All Bikes</option>
-
-            {bikeTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-
-          {/* QUALITY FILTER */}
-          <select
-            value={filters.quality}
-            onChange={(e) =>
-              setFilters({
-                ...filters,
-                quality: e.target.value,
-              })
-            }
-            className="px-4 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#0a0a0a] outline-none text-sm"
-          >
-            <option value="">All Quality</option>
-
-            {qualities.map((quality) => (
-              <option key={quality} value={quality}>
-                {quality}
-              </option>
-            ))}
-          </select>
-
-          {/* MODEL FILTER */}
-          <select
-            value={filters.model}
-            onChange={(e) =>
-              setFilters({
-                ...filters,
-                model: e.target.value,
-              })
-            }
-            className="px-4 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#0a0a0a] outline-none text-sm"
-          >
-            <option value="">All Models</option>
-
-            {models.map((model) => (
-              <option key={model} value={model}>
-                {model}
-              </option>
-            ))}
-          </select>
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="bg-transparent outline-none w-full text-sm placeholder:text-gray-400"
+          />
         </div>
       </div>
 
@@ -458,6 +354,7 @@ export default function Bill() {
           </span>
         </div>
 
+        {/* CHANGED TO 2 COLUMNS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredProducts.map((p) => {
             const lowStock = p.stock <= 5;
@@ -517,6 +414,158 @@ export default function Bill() {
               </motion.div>
             );
           })}
+        </div>
+      </div>
+
+      {/* CREATE BILL SECTION */}
+      <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#0a0a0a] p-5 flex flex-col">
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-2xl font-black">Create Bill</h2>
+
+          <span className="px-3 py-1 rounded-full bg-green-500/10 text-green-500 text-xs font-bold">
+            {cart.length} Added
+          </span>
+        </div>
+
+        {/* CLIENT */}
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border border-black/10 dark:border-white/10 bg-gray-100 dark:bg-black/20 mb-5">
+          <FaUser className="text-gray-400" />
+
+          <input
+            placeholder="Client Name"
+            value={clientName}
+            onChange={(e) => setClientName(e.target.value)}
+            className="bg-transparent outline-none w-full placeholder:text-gray-400"
+          />
+        </div>
+
+        {/* CART */}
+        <div className="space-y-4">
+          {cart.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-black/10 dark:border-white/10 p-10 text-center">
+              <FaShoppingCart className="mx-auto text-4xl text-gray-400 mb-4" />
+
+              <h3 className="font-bold text-lg">Cart is Empty</h3>
+
+              <p className="text-sm text-gray-500 dark:text-white/50 mt-2">
+                Click products to add items
+              </p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 xl:grid-cols-2 gap-4">
+              {cart.map((item) => {
+                const isOut = item.quantity > item.stock;
+
+                return (
+                  <motion.div
+                    key={item.id}
+                    whileHover={{ y: -2 }}
+                    className={`rounded-3xl p-5 border ${
+                      isOut
+                        ? "border-red-500/30 bg-red-500/[0.05]"
+                        : "border-black/10 dark:border-white/10 bg-gray-50 dark:bg-white/[0.03]"
+                    }`}
+                  >
+                    {/* TOP */}
+                    <div className="flex justify-between gap-4">
+                      <div className="min-w-0">
+                        <h3 className="font-black break-words text-lg">
+                          {item.product_name}
+                        </h3>
+
+                        <p className="text-sm text-gray-500 dark:text-white/50 mt-1">
+                          Stock: {formatNumber(item.stock)}
+                        </p>
+
+                        {isOut && (
+                          <p className="text-red-500 text-xs mt-1">
+                            Not enough stock available
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="h-10 w-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center hover:scale-105 transition-all flex-shrink-0"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+
+                    {/* INPUTS */}
+                    <div className="grid grid-cols-2 gap-3 mt-5">
+                      <input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateQty(item.id, parseInt(e.target.value))
+                        }
+                        placeholder="Qty"
+                        className="w-full rounded-2xl px-4 py-3 border border-black/10 dark:border-white/10 bg-gray-100 dark:bg-black/20 outline-none"
+                      />
+
+                      <input
+                        type="number"
+                        placeholder="Price"
+                        value={item.price}
+                        onChange={(e) =>
+                          updatePrice(item.id, e.target.value)
+                        }
+                        className="w-full rounded-2xl px-4 py-3 border border-black/10 dark:border-white/10 bg-gray-100 dark:bg-black/20 outline-none"
+                      />
+                    </div>
+
+                    {/* SUBTOTAL */}
+                    <div className="mt-4 flex justify-between items-center">
+                      <span className="text-sm text-gray-500 dark:text-white/50">
+                        Subtotal
+                      </span>
+
+                      <span className="font-black text-lg">
+                        Rs{" "}
+                        {formatNumber(
+                          item.quantity * (parseFloat(item.price) || 0)
+                        )}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* TOTAL */}
+        <div className="mt-5 rounded-3xl border border-black/10 dark:border-white/10 bg-gray-100 dark:bg-black/20 p-5">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-white/50">
+                Total Amount
+              </p>
+
+              <h2 className="text-4xl font-black mt-2 break-words">
+                Rs {formatNumber(total)}
+              </h2>
+            </div>
+
+            <div className="h-14 w-14 rounded-2xl bg-green-500/10 text-green-500 flex items-center justify-center text-xl">
+              <FaPrint />
+            </div>
+          </div>
+
+          {/* SAVE BUTTON */}
+          <button
+            onClick={saveBill}
+            disabled={loading || hasStockIssue}
+            className={`mt-5 w-full py-4 rounded-2xl font-black transition-all duration-300 ${
+              hasStockIssue
+                ? "bg-red-500 text-white cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-600 text-black"
+            }`}
+          >
+            {loading ? "Saving..." : "Save & Print Invoice"}
+          </button>
         </div>
       </div>
     </div>
