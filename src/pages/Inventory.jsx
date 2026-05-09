@@ -143,18 +143,6 @@ export default function Inventory() {
             Manage products, stock, models & quality
           </p>
         </div>
-
-        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl border bg-white dark:bg-[#0a0a0a] w-full lg:w-[320px]">
-          <FaSearch className="text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search inventory..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="bg-transparent outline-none w-full text-sm"
-          />
-        </div>
-
       </div>
 
       {/* SUMMARY */}
@@ -188,6 +176,67 @@ export default function Inventory() {
           </div>
           <FaExclamationTriangle className="text-red-500 text-3xl" />
         </motion.div>
+
+        {/* PREMIUM SEARCH + FILTER BAR */}
+<motion.div
+  initial={{ opacity: 0, y: 15 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.3 }}
+  className="relative overflow-hidden rounded-[32px] border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#0a0a0a]/90 backdrop-blur-xl p-5 shadow-2xl shadow-black/5"
+>
+  {/* GLOW */}
+  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/[0.03] via-purple-500/[0.03] to-cyan-500/[0.03] pointer-events-none" />
+
+  {/* TOP */}
+  <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-5">
+    <div className="flex items-center gap-3">
+      <div className="h-14 w-14 rounded-3xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-500 flex items-center justify-center text-2xl shadow-lg shadow-blue-500/10 border border-blue-500/10">
+        <FaSearch />
+      </div>
+
+      <div>
+        <h3 className="text-2xl font-black tracking-tight">
+          Search Inventory
+        </h3>
+
+        <p className="text-sm text-gray-500 dark:text-white/50 mt-1">
+          Quickly find products, bike types, quality & models
+        </p>
+      </div>
+    </div>
+
+    {/* CLEAR SEARCH */}
+    <button
+      onClick={() => setSearch("")}
+      className="px-5 py-3 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold text-sm transition-all duration-300 border border-red-500/10 hover:scale-[1.02]"
+    >
+      Clear Search
+    </button>
+  </div>
+
+  {/* SEARCH INPUT */}
+  <div className="relative">
+    <div className="group flex items-center gap-3 px-5 py-4 rounded-3xl border border-black/10 dark:border-white/10 bg-gray-100/80 dark:bg-white/[0.03] focus-within:border-blue-500/40 focus-within:shadow-lg focus-within:shadow-blue-500/10 transition-all duration-300">
+      <div className="h-11 w-11 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-lg group-focus-within:scale-110 transition-all duration-300">
+        <FaSearch />
+      </div>
+
+      <div className="flex-1">
+        <p className="text-xs text-gray-500 dark:text-white/40 mb-1">
+          Search Inventory
+        </p>
+
+        <input
+          type="text"
+          placeholder="Type product, bike type, quality or model..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="bg-transparent outline-none w-full text-sm font-medium placeholder:text-gray-400"
+        />
+      </div>
+    </div>
+  </div>
+</motion.div>
 
       </div>
 
