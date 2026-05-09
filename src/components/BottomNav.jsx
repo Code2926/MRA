@@ -15,18 +15,22 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
+    <div className="fixed bottom-4 left-0 right-0 z-50 lg:hidden flex justify-center">
 
-      {/* BACKDROP */}
+      {/* FLOATING DOCK */}
       <div className="
-        absolute inset-0
-        bg-white/80 dark:bg-[#050505]/80
-        backdrop-blur-2xl
-        border-t border-black/10 dark:border-white/10
-      " />
+        relative
+        flex items-center justify-around
+        w-[92%] max-w-md
+        px-2 py-2
+        rounded-3xl
 
-      {/* NAV */}
-      <div className="relative flex items-center justify-around px-2 py-2">
+        bg-white/70 dark:bg-[#0a0a0a]/70
+        backdrop-blur-2xl
+
+        border border-black/10 dark:border-white/10
+        shadow-[0_10px_40px_rgba(0,0,0,0.15)]
+      ">
 
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
@@ -34,20 +38,23 @@ export default function BottomNav() {
           return (
             <Link key={item.name} to={item.path} className="flex-1">
               <motion.div
-                whileTap={{ scale: 0.92 }}
-                className="relative flex flex-col items-center justify-center py-2"
+                whileTap={{ scale: 0.9 }}
+                className="relative flex flex-col items-center justify-center"
               >
 
-                {/* ACTIVE PILL */}
+                {/* ACTIVE BACKGROUND */}
                 {isActive && (
                   <motion.div
-                    layoutId="bottom-nav-pill"
+                    layoutId="active-pill"
                     className="
-                      absolute inset-x-3 top-0 bottom-0
+                      absolute -top-2
+                      w-12 h-12
                       rounded-2xl
-                      bg-black/5 dark:bg-white/10
+
+                      bg-black/10 dark:bg-white/10
                       border border-black/10 dark:border-white/10
-                      shadow-sm dark:shadow-none
+
+                      shadow-md
                     "
                   />
                 )}
@@ -58,7 +65,7 @@ export default function BottomNav() {
                     relative z-10 text-xl transition-all duration-300
                     ${isActive
                       ? "text-black dark:text-white scale-110"
-                      : "text-black/50 dark:text-white/50"}
+                      : "text-black/40 dark:text-white/40"}
                   `}
                 >
                   {item.icon}
@@ -71,7 +78,7 @@ export default function BottomNav() {
                     transition-all duration-300
                     ${isActive
                       ? "text-black dark:text-white"
-                      : "text-black/50 dark:text-white/50"}
+                      : "text-black/40 dark:text-white/40"}
                   `}
                 >
                   {item.name}
@@ -80,8 +87,8 @@ export default function BottomNav() {
                 {/* ACTIVE DOT */}
                 {isActive && (
                   <motion.div
-                    layoutId="bottom-nav-dot"
-                    className="relative z-10 mt-1 h-1.5 w-1.5 rounded-full bg-black dark:bg-white"
+                    layoutId="active-dot"
+                    className="mt-1 h-1 w-1 rounded-full bg-black dark:bg-white"
                   />
                 )}
 
@@ -91,9 +98,6 @@ export default function BottomNav() {
         })}
 
       </div>
-
-      {/* SAFE AREA */}
-      <div className="h-[env(safe-area-inset-bottom)] bg-white dark:bg-[#050505]/80" />
     </div>
   );
 }
