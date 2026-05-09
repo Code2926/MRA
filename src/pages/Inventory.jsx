@@ -200,12 +200,14 @@ export default function Inventory() {
           <FaExclamationTriangle className="text-red-500 text-3xl" />
         </motion.div>
 
-        {/* PREMIUM SEARCH + FILTER BAR */}
+      </div>
+
+      {/* PREMIUM SEARCH + FILTER BAR - FULL WIDTH */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="relative overflow-hidden rounded-[32px] border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#0a0a0a]/90 backdrop-blur-xl p-5 shadow-2xl shadow-black/5"
+        className="col-span-full xl:col-span-3 relative overflow-hidden rounded-[32px] border border-black/10 dark:border-white/10 bg-white/80 dark:bg-[#0a0a0a]/90 backdrop-blur-xl p-5 shadow-2xl shadow-black/5"
       >
         {/* GLOW */}
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/[0.03] via-purple-500/[0.03] to-cyan-500/[0.03] pointer-events-none" />
@@ -325,8 +327,6 @@ export default function Inventory() {
           </div>
         </div>
       </motion.div>
-
-      </div>
 
       {/* ITEMS */}
       {loading ? (
