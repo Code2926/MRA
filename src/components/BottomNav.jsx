@@ -1,15 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
 import { FaChartPie, FaClipboardList, FaFileInvoice, FaChartBar } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { useTheme } from "../context/ThemeContext";
 
 export default function BottomNav() {
   const location = useLocation();
+  const { theme } = useTheme();
 
   const navItems = [
-    { path: "/", icon: <FaChartPie /> },
-    { path: "/inventory", icon: <FaClipboardList /> },
-    { path: "/bill", icon: <FaFileInvoice /> },
-    { path: "/reports", icon: <FaChartBar /> },
+    { name: "Dashboard", path: "/", icon: <FaChartPie /> },
+    { name: "Inventory", path: "/inventory", icon: <FaClipboardList /> },
+    { name: "Bill", path: "/bill", icon: <FaFileInvoice /> },
+    { name: "Reports", path: "/reports", icon: <FaChartBar /> },
   ];
 
   return (
@@ -19,8 +21,8 @@ export default function BottomNav() {
       <div className="
         relative
         flex items-center justify-around
-        w-[85%] max-w-sm
-        px-2 py-3
+        w-[92%] max-w-md
+        px-2 py-2
         rounded-3xl
 
         bg-white/70 dark:bg-[#0a0a0a]/70
@@ -34,10 +36,10 @@ export default function BottomNav() {
           const isActive = location.pathname === item.path;
 
           return (
-            <Link key={item.path} to={item.path} className="flex-1">
+            <Link key={item.name} to={item.path} className="flex-1">
               <motion.div
                 whileTap={{ scale: 0.9 }}
-                className="relative flex items-center justify-center"
+                className="relative flex flex-col items-center justify-center"
               >
 
                 {/* ACTIVE BACKGROUND */}
@@ -45,17 +47,19 @@ export default function BottomNav() {
                   <motion.div
                     layoutId="active-pill"
                     className="
-                      absolute
-                      w-11 h-11
+                      absolute -top-2
+                      w-12 h-12
                       rounded-2xl
+
                       bg-black/10 dark:bg-white/10
                       border border-black/10 dark:border-white/10
+
                       shadow-md
                     "
                   />
                 )}
 
-                {/* ICON ONLY */}
+                {/* ICON */}
                 <div
                   className={`
                     relative z-10 text-xl transition-all duration-300
@@ -67,11 +71,23 @@ export default function BottomNav() {
                   {item.icon}
                 </div>
 
+                {/* LABEL (HIDDEN ON MOBILE, SHOWN ON DESKTOP IF NEEDED) */}
+                <span
+                  className="
+                    hidden sm:block
+                    relative z-10 text-[10px] mt-1 font-medium
+                    transition-all duration-300
+                    text-black/40 dark:text-white/40
+                  "
+                >
+                  {item.name}
+                </span>
+
                 {/* ACTIVE DOT */}
                 {isActive && (
                   <motion.div
                     layoutId="active-dot"
-                    className="absolute -bottom-2 h-1 w-1 rounded-full bg-black dark:bg-white"
+                    className="mt-1 h-1 w-1 rounded-full bg-black dark:bg-white"
                   />
                 )}
 
