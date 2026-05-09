@@ -308,10 +308,6 @@ export default function Bill() {
 
             <div>
               <h3 className="font-black text-lg">Search & Filters</h3>
-
-              <p className="text-xs text-gray-500 dark:text-white/50">
-                Find exact products quickly
-              </p>
             </div>
           </div>
 
