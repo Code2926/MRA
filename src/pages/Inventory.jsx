@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "../supabase";
 import toast from "react-hot-toast";
@@ -19,7 +19,7 @@ export default function Inventory() {
   const [inputs, setInputs] = useState({});
   const [search, setSearch] = useState("");
 
-   /* SEARCH + FILTERS */
+  /* SEARCH + FILTERS */
   const [bikeFilter, setBikeFilter] = useState("");
   const [qualityFilter, setQualityFilter] = useState("");
   const [modelFilter, setModelFilter] = useState("");
@@ -28,65 +28,41 @@ export default function Inventory() {
   const formatNumber = (num) => {
     const value = Number(num) || 0;
 
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`;
-    }
-
-    if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}K`;
-    }
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
 
     return value;
   };
 
-  /* UNIQUE FILTER OPTIONS */
+  /* UNIQUE FILTER OPTIONS (FIXED: items not products) */
   const bikeTypes = [
-    ...new Set(products.map((p) => p.bike_type).filter(Boolean)),
+    ...new Set(items.map((p) => p.bike_type).filter(Boolean)),
   ];
 
   const qualities = [
-    ...new Set(products.map((p) => p.quality).filter(Boolean)),
+    ...new Set(items.map((p) => p.quality).filter(Boolean)),
   ];
 
   const models = [
-    ...new Set(products.map((p) => p.model).filter(Boolean)),
+    ...new Set(items.map((p) => p.model).filter(Boolean)),
   ];
 
-  /* FILTER PRODUCTS */
-  const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+  /* FILTER PRODUCTS (FIXED: items not products) */
+  const filteredItems = useMemo(() => {
+    return items.filter((p) => {
       const matchesSearch = `${p.product_name} ${p.bike_type} ${
         p.quality
       } ${p.model || ""}`
         .toLowerCase()
         .includes(search.toLowerCase());
 
-      const matchesBike = bikeFilter
-        ? p.bike_type === bikeFilter
-        : true;
+      const matchesBike = bikeFilter ? p.bike_type === bikeFilter : true;
+      const matchesQuality = qualityFilter ? p.quality === qualityFilter : true;
+      const matchesModel = modelFilter ? p.model === modelFilter : true;
 
-      const matchesQuality = qualityFilter
-        ? p.quality === qualityFilter
-        : true;
-
-      const matchesModel = modelFilter
-        ? p.model === modelFilter
-        : true;
-
-      return (
-        matchesSearch &&
-        matchesBike &&
-        matchesQuality &&
-        matchesModel
-      );
+      return matchesSearch && matchesBike && matchesQuality && matchesModel;
     });
-  }, [
-    products,
-    search,
-    bikeFilter,
-    qualityFilter,
-    modelFilter,
-  ]);
+  }, [items, search, bikeFilter, qualityFilter, modelFilter]);
 
   /* FETCH PRODUCTS */
   const fetchItems = async () => {
@@ -118,9 +94,7 @@ export default function Inventory() {
           schema: "public",
           table: "products",
         },
-        () => {
-          fetchItems();
-        }
+        () => fetchItems()
       )
       .subscribe();
 
@@ -138,9 +112,7 @@ export default function Inventory() {
       .update({ stock: newStock })
       .eq("id", id);
 
-    if (error) {
-      toast.error("Stock update failed");
-    }
+    if (error) toast.error("Stock update failed");
   };
 
   /* ADD STOCK */
@@ -152,13 +124,9 @@ export default function Inventory() {
     }
 
     await updateStock(item.id, item.stock + value);
-
     toast.success("Stock Added");
 
-    setInputs({
-      ...inputs,
-      [item.id]: "",
-    });
+    setInputs({ ...inputs, [item.id]: "" });
   };
 
   /* DEDUCT STOCK */
@@ -174,13 +142,9 @@ export default function Inventory() {
     }
 
     await updateStock(item.id, item.stock - value);
-
     toast.success("Stock Deducted");
 
-    setInputs({
-      ...inputs,
-      [item.id]: "",
-    });
+    setInputs({ ...inputs, [item.id]: "" });
   };
 
   const totalStock = items.reduce(
@@ -189,17 +153,6 @@ export default function Inventory() {
   );
 
   const lowStockItems = items.filter((item) => item.stock <= 5);
-
-  const filteredItems = items.filter((item) =>
-    `
-      ${item.product_name}
-      ${item.bike_type}
-      ${item.quality}
-      ${item.model}
-    `
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
 
   return (
     <div className="space-y-6 text-black dark:text-white">
