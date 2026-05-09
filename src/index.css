@@ -1,0 +1,16 @@
+/* src/index.css */
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer base {
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-family: "Orbitron", sans-serif;
+  }
+  
+  html, body {
+    @apply bg-white text-black dark:bg-[#050505] dark:text-white;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
