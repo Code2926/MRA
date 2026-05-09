@@ -22,6 +22,7 @@ export default function Bill() {
   const [settings, setSettings] = useState(null);
   const [search, setSearch] = useState("");
 
+  /* FETCH PRODUCTS */
   const fetchProducts = async () => {
     const { data, error } = await supabase
       .from("products")
@@ -35,6 +36,7 @@ export default function Bill() {
     }
   };
 
+  /* FETCH SETTINGS */
   const fetchSettings = async () => {
     const { data, error } = await supabase
       .from("settings")
@@ -49,20 +51,28 @@ export default function Bill() {
     fetchSettings();
   }, []);
 
+  /* FORMAT */
   const formatNumber = (num) => {
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
     return num;
   };
 
+  /* FILTER */
   const filteredProducts = useMemo(() => {
     return products.filter((p) =>
-      `${p.product_name} ${p.bike_type} ${p.quality} ${p.model}`
+      `
+        ${p.product_name}
+        ${p.bike_type}
+        ${p.quality}
+        ${p.model}
+      `
         .toLowerCase()
         .includes(search.toLowerCase())
     );
   }, [products, search]);
 
+  /* CART FUNCTIONS */
   const addToCart = (product) => {
     const exists = cart.find((item) => item.id === product.id);
 
@@ -104,25 +114,71 @@ export default function Bill() {
   };
 
   const total = cart.reduce((sum, item) => {
-    const price = parseFloat(item.price) || 0;
-    return sum + item.quantity * price;
+    return sum + item.quantity * (parseFloat(item.price) || 0);
   }, 0);
 
   const validate = () => {
-    if (!clientName) return toast.error("Enter client name");
-    if (!cart.length) return toast.error("Cart is empty");
+    if (!clientName) return toast.error("Enter client name"), false;
+    if (!cart.length) return toast.error("Cart empty"), false;
     return true;
   };
 
   const saveBill = async () => {
     if (!validate()) return;
-    toast.success("Saved (demo)");
+    setLoading(true);
+
+    const prefix = settings?.invoice_prefix || "BILL";
+
+    try {
+      const { data: billData, error } = await supabase
+        .from("bills")
+        .insert([
+          {
+            bill_number: `${prefix}-${Date.now()}`,
+            client_name: clientName,
+            total_amount: total,
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const items = cart.map((item) => ({
+        bill_id: billData.id,
+        product_id: item.id,
+        quantity: item.quantity,
+        price: parseFloat(item.price),
+      }));
+
+      await supabase.from("bill_items").insert(items);
+
+      for (let item of cart) {
+        await supabase
+          .from("products")
+          .update({ stock: item.stock - item.quantity })
+          .eq("id", item.id);
+      }
+
+      toast.success("Bill saved");
+      setCart([]);
+      setClientName("");
+      fetchProducts();
+    } catch (err) {
+      toast.error("Error saving bill");
+    }
+
+    setLoading(false);
   };
 
-  const hasStockIssue = cart.some(
-    (item) => item.quantity > item.stock
+  const totalStock = products.reduce(
+    (sum, p) => sum + Number(p.stock || 0),
+    0
   );
 
+  const lowStock = products.filter((p) => p.stock <= 5);
+
+  /* UI */
   return (
     <div className="space-y-6 text-black dark:text-white">
 
@@ -146,105 +202,95 @@ export default function Bill() {
         </div>
       </div>
 
-      {/* MAIN GRID (FIXED LAYOUT) */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-        {/* LEFT: PRODUCTS (NO SCROLL NOW) */}
-        <div className="xl:col-span-2 rounded-3xl border bg-white dark:bg-[#0a0a0a] p-5">
-
-          <div className="flex justify-between items-center mb-5">
-            <h2 className="text-2xl font-black">Products</h2>
-            <span className="text-xs px-3 py-1 rounded-full bg-blue-500/10 text-blue-500">
-              {filteredProducts.length} Items
-            </span>
-          </div>
-
-          {/* PRODUCTS GRID (NO OVERFLOW SCROLL) */}
-          <div className="grid sm:grid-cols-2 gap-4">
-            {filteredProducts.map((p) => {
-              const lowStock = p.stock <= 5;
-
-              return (
-                <motion.div
-                  key={p.id}
-                  whileHover={{ y: -3 }}
-                  onClick={() => addToCart(p)}
-                  className={`cursor-pointer rounded-3xl p-5 border ${
-                    lowStock
-                      ? "border-red-500/20 bg-red-500/5"
-                      : "border-black/10 dark:border-white/10 bg-gray-50 dark:bg-white/5"
-                  }`}
-                >
-                  <h3 className="font-black">{p.product_name}</h3>
-
-                  <div className="flex gap-2 mt-2 text-xs">
-                    <span className="text-blue-500">{p.bike_type}</span>
-                    <span className="text-yellow-500">{p.quality}</span>
-                    <span className="text-green-500">{p.model}</span>
-                  </div>
-
-                  <div className="mt-4 font-black text-lg">
-                    Stock: {formatNumber(p.stock)}
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-
+      {/* SUMMARY */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-3xl border p-5 bg-white dark:bg-[#0a0a0a]">
+          <FaBox className="text-blue-500 text-2xl float-right" />
+          <p>Total Products</p>
+          <h2 className="text-3xl font-black">{products.length}</h2>
         </div>
 
-        {/* RIGHT: BILL (STICKY) */}
-        <div className="xl:col-span-1 xl:sticky xl:top-5 h-fit rounded-3xl border bg-white dark:bg-[#0a0a0a] p-5">
+        <div className="rounded-3xl border p-5 bg-white dark:bg-[#0a0a0a]">
+          <FaShoppingCart className="text-green-500 text-2xl float-right" />
+          <p>Cart Items</p>
+          <h2 className="text-3xl font-black">{cart.length}</h2>
+        </div>
 
-          <h2 className="text-2xl font-black mb-5">Create Bill</h2>
+        <div className="rounded-3xl border p-5 bg-white dark:bg-[#0a0a0a]">
+          <FaFileInvoice className="text-yellow-500 text-2xl float-right" />
+          <p>Total</p>
+          <h2 className="text-3xl font-black">Rs {total}</h2>
+        </div>
+      </div>
+
+      {/* 🔥 STACKED LAYOUT (FIXED) */}
+      <div className="flex flex-col gap-6">
+
+        {/* PRODUCTS */}
+        <div className="rounded-3xl border p-5 bg-white dark:bg-[#0a0a0a]">
+
+          <h2 className="text-2xl font-black mb-4">Products</h2>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            {filteredProducts.map((p) => (
+              <motion.div
+                key={p.id}
+                whileHover={{ y: -4 }}
+                onClick={() => addToCart(p)}
+                className="cursor-pointer rounded-2xl p-4 border bg-gray-50 dark:bg-white/5"
+              >
+                <h3 className="font-bold">{p.product_name}</h3>
+                <p className="text-sm text-gray-500">Stock: {p.stock}</p>
+              </motion.div>
+            ))}
+
+          </div>
+        </div>
+
+        {/* BILL */}
+        <div className="rounded-3xl border p-5 bg-white dark:bg-[#0a0a0a]">
+
+          <h2 className="text-2xl font-black mb-4">Create Bill</h2>
 
           <input
             value={clientName}
             onChange={(e) => setClientName(e.target.value)}
             placeholder="Client Name"
-            className="w-full mb-5 p-3 rounded-2xl bg-gray-100 dark:bg-black/30"
+            className="w-full p-3 rounded-xl border mb-4 bg-gray-100 dark:bg-black/20"
           />
 
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
-            {cart.map((item) => (
-              <div key={item.id} className="border p-3 rounded-2xl">
+          {cart.map((item) => (
+            <div key={item.id} className="border p-3 rounded-xl mb-3">
+              <h3 className="font-bold">{item.product_name}</h3>
 
-                <div className="flex justify-between">
-                  <h3 className="font-bold">{item.product_name}</h3>
-                  <button onClick={() => removeItem(item.id)}>
-                    <FaTrash className="text-red-500" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mt-3">
-                  <input
-                    value={item.quantity}
-                    onChange={(e) =>
-                      updateQty(item.id, parseInt(e.target.value))
-                    }
-                    className="p-2 rounded-xl bg-gray-100 dark:bg-black/20"
-                  />
-
-                  <input
-                    value={item.price}
-                    onChange={(e) =>
-                      updatePrice(item.id, e.target.value)
-                    }
-                    className="p-2 rounded-xl bg-gray-100 dark:bg-black/20"
-                  />
-                </div>
-
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <input
+                  value={item.quantity}
+                  onChange={(e) => updateQty(item.id, e.target.value)}
+                  className="p-2 border rounded"
+                  placeholder="Qty"
+                />
+                <input
+                  value={item.price}
+                  onChange={(e) => updatePrice(item.id, e.target.value)}
+                  className="p-2 border rounded"
+                  placeholder="Price"
+                />
               </div>
-            ))}
-          </div>
 
-          <div className="mt-5 font-black text-2xl">
-            Total: Rs {formatNumber(total)}
-          </div>
+              <button
+                onClick={() => removeItem(item.id)}
+                className="text-red-500 mt-2"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
 
           <button
             onClick={saveBill}
-            className="w-full mt-4 py-3 rounded-2xl bg-green-500 font-black"
+            className="w-full bg-green-500 py-3 rounded-xl font-bold mt-4"
           >
             Save Bill
           </button>
