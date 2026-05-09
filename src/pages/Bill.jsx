@@ -597,7 +597,8 @@ export default function Bill() {
     </div>
   </div>
 </div>
-      </motion.div>
+</div>
+</motion.div>
 
       {/* PRODUCTS SECTION */}
       <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-white dark:bg-[#0a0a0a] p-5">
