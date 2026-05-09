@@ -20,7 +20,6 @@ export default function Inventory() {
   const [search, setSearch] = useState("");
 
    /* SEARCH + FILTERS */
-  const [search, setSearch] = useState("");
   const [bikeFilter, setBikeFilter] = useState("");
   const [qualityFilter, setQualityFilter] = useState("");
   const [modelFilter, setModelFilter] = useState("");
