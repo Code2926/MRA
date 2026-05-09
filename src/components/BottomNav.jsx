@@ -1,11 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { FaChartPie, FaClipboardList, FaFileInvoice, FaChartBar } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { useTheme } from "../context/ThemeContext";
 
 export default function BottomNav() {
   const location = useLocation();
-  const { theme } = useTheme();
 
   const navItems = [
     { name: "Dashboard", path: "/", icon: <FaChartPie /> },
@@ -21,8 +19,8 @@ export default function BottomNav() {
       <div className="
         relative
         flex items-center justify-around
-        w-[92%] max-w-md
-        px-2 py-2
+        w-[85%] max-w-sm
+        px-2 py-3
         rounded-3xl
 
         bg-white/70 dark:bg-[#0a0a0a]/70
@@ -39,7 +37,7 @@ export default function BottomNav() {
             <Link key={item.name} to={item.path} className="flex-1">
               <motion.div
                 whileTap={{ scale: 0.9 }}
-                className="relative flex flex-col items-center justify-center"
+                className="relative flex items-center justify-center"
               >
 
                 {/* ACTIVE BACKGROUND */}
@@ -47,19 +45,17 @@ export default function BottomNav() {
                   <motion.div
                     layoutId="active-pill"
                     className="
-                      absolute -top-2
-                      w-12 h-12
+                      absolute
+                      w-11 h-11
                       rounded-2xl
-
                       bg-black/10 dark:bg-white/10
                       border border-black/10 dark:border-white/10
-
                       shadow-md
                     "
                   />
                 )}
 
-                {/* ICON */}
+                {/* ICON ONLY */}
                 <div
                   className={`
                     relative z-10 text-xl transition-all duration-300
@@ -71,24 +67,11 @@ export default function BottomNav() {
                   {item.icon}
                 </div>
 
-                {/* LABEL */}
-                <span
-                  className={`
-                    relative z-10 text-[10px] mt-1 font-medium
-                    transition-all duration-300
-                    ${isActive
-                      ? "text-black dark:text-white"
-                      : "text-black/40 dark:text-white/40"}
-                  `}
-                >
-                  {item.name}
-                </span>
-
                 {/* ACTIVE DOT */}
                 {isActive && (
                   <motion.div
                     layoutId="active-dot"
-                    className="mt-1 h-1 w-1 rounded-full bg-black dark:bg-white"
+                    className="absolute -bottom-2 h-1 w-1 rounded-full bg-black dark:bg-white"
                   />
                 )}
 
