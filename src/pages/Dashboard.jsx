@@ -282,7 +282,7 @@ export default function Dashboard() {
         <Card
           title="Revenue"
           value={stats.totalSales}
-          icon={<span style="font-weight:bold;">Rs.</span>}
+          icon={<span className="font-bold">Rs</span>}
           trend="+24%"
           iconBg="bg-yellow-500/15"
           iconColor="text-yellow-500"
