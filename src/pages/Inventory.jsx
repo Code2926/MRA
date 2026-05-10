@@ -226,7 +226,7 @@ export default function Inventory() {
     0
   );
 
-  const lowStockItems = items.filter((item) => item.stock <= 100);
+  const lowStockItems = items.filter((item) => item.stock <= 99);
 
   return (
     <div className="space-y-6 text-black dark:text-white">
@@ -537,7 +537,7 @@ export default function Inventory() {
         <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
 
           {filteredItems.map((item) => {
-            const lowStock = item.stock <= 100;
+            const lowStock = item.stock <= 99;
 
             return (
               <motion.div
