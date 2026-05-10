@@ -98,41 +98,135 @@ export default function Inventory() {
   };
 
   const addStock = async (item) => {
-    const value = parseInt(inputs[item.id] || 0);
+  const value = parseInt(inputs[item.id] || 0);
 
-    if (!value || value <= 0) {
-      return toast.error("Enter valid quantity");
-    }
+  if (!value || value <= 0) {
+    return toast.error("Enter valid quantity");
+  }
 
-    await updateStock(item.id, item.stock + value);
-    toast.success("Stock Added");
+  /* UPDATE PRODUCT STOCK */
+  const { error: stockError } =
+    await supabase
+      .from("products")
+      .update({
+        stock:
+          item.stock + value,
+      })
+      .eq("id", item.id);
 
-    setInputs({ ...inputs, [item.id]: "" });
-  };
+  if (stockError) {
+    return toast.error(
+      "Stock update failed"
+    );
+  }
+
+  /* CREATE STOCK LOG */
+  const { error: logError } =
+    await supabase
+      .from("stock_logs")
+      .insert([
+        {
+          product_id:
+            item.id,
+          quantity: value,
+          type: "IN",
+        },
+      ]);
+
+  if (logError) {
+    console.error(
+      logError
+    );
+
+    return toast.error(
+      "Stock log failed"
+    );
+  }
+
+  toast.success(
+    "Stock Added"
+  );
+
+  setInputs({
+    ...inputs,
+    [item.id]: "",
+  });
+
+  fetchItems();
+};
 
   const deductStock = async (item) => {
-    const value = parseInt(inputs[item.id] || 0);
+  const value = parseInt(inputs[item.id] || 0);
 
-    if (!value || value <= 0) {
-      return toast.error("Enter valid quantity");
-    }
+  if (!value || value <= 0) {
+    return toast.error("Enter valid quantity");
+  }
 
-    if (item.stock - value < 0) {
-      return toast.error("Not enough stock");
-    }
+  if (
+    item.stock - value < 0
+  ) {
+    return toast.error(
+      "Not enough stock"
+    );
+  }
 
-    await updateStock(item.id, item.stock - value);
-    toast.success("Stock Deducted");
+  /* UPDATE PRODUCT STOCK */
+  const { error: stockError } =
+    await supabase
+      .from("products")
+      .update({
+        stock:
+          item.stock - value,
+      })
+      .eq("id", item.id);
 
-    setInputs({ ...inputs, [item.id]: "" });
-  };
+  if (stockError) {
+    return toast.error(
+      "Stock update failed"
+    );
+  }
+
+  /* CREATE STOCK LOG */
+  const { error: logError } =
+    await supabase
+      .from("stock_logs")
+      .insert([
+        {
+          product_id:
+            item.id,
+          quantity: value,
+          type: "OUT",
+        },
+      ]);
+
+  if (logError) {
+    console.error(
+      logError
+    );
+
+    return toast.error(
+      "Stock log failed"
+    );
+  }
+
+  toast.success(
+    "Stock Deducted"
+  );
+
+  setInputs({
+    ...inputs,
+    [item.id]: "",
+  });
+
+  fetchItems();
+};
 
   const totalStock = items.reduce(
     (sum, item) => sum + Number(item.stock || 0),
     0
   );
 
-  const lowStockItems = items.filter((item) => item.stock <= 5);
+  const lowStockItems = items.filter((item) => item.stock <= 100);
 
   return (
     <div className="space-y-6 text-black dark:text-white">
