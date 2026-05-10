@@ -529,7 +529,7 @@ export default function Bill() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredProducts.map((p) => {
-            const lowStock = p.stock <= 5;
+            const lowStock = p.stock <= 99;
 
             return (
               <motion.div
