@@ -228,10 +228,12 @@ export default function Inventory() {
     0
   );
 
-  const LOW_STOCK_THRESHOLD = 500;
+  const LOW_STOCK_THRESHOLD = 99;
 
 const lowStockItems = items.filter(
-  (item) => Number(item.stock || 0) <= LOW_STOCK_THRESHOLD
+  (item) => const stock = Number(item.stock || 0);
+  const lowStock = stock > 0 && stock <= 99;
+  const outOfStock = stock === 0;
 );
 
   return (
