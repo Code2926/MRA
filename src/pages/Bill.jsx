@@ -597,6 +597,27 @@ export default function Bill() {
               </motion.div>
             );
           })}
+
+          {filteredItems.length === 0 && (
+  <div
+    className="
+      col-span-full
+      rounded-3xl
+      border border-black/10 dark:border-white/10
+      bg-white dark:bg-[#0a0a0a]
+      p-16
+      text-center
+    "
+  >
+    <p className="text-lg font-bold text-gray-500 dark:text-white/40">
+      No products found
+    </p>
+
+    <p className="text-sm text-gray-400 dark:text-white/30 mt-2">
+      Try changing search or filters
+    </p>
+  </div>
+)}
         </div>
       </div>
 
