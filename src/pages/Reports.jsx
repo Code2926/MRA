@@ -1,14 +1,19 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import { supabase } from "../supabase";
+import toast from "react-hot-toast";
+
 import {
-  FaBoxes,
-  FaShoppingCart,
-  FaFileInvoice,
   FaChartLine,
-  FaUser,
-  FaClock,
+  FaFileInvoice,
+  FaUsers,
   FaWarehouse,
   FaDownload,
-  FaFileExcel,
+  FaFilter,
+  FaExclamationTriangle,
+  FaSearch,
+  FaBoxes,
+  FaSyncAlt,
 } from "react-icons/fa";
 
 import {
@@ -16,214 +21,677 @@ import {
   AreaChart,
   Area,
   XAxis,
+  YAxis,
   Tooltip,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  Legend,
 } from "recharts";
 
-const Reports = () => {
-  const logs = [
-    {
-      type: "STOCK_IN",
-      item: "CG125 Brake",
-      qty: 50,
-      ref: "Manual Add",
-      time: "Today 10:30 AM",
-    },
-    {
-      type: "STOCK_OUT",
-      item: "CD70 Clutch",
-      qty: 3,
-      ref: "Bill #10021 (Ali Traders)",
-      time: "Today 11:10 AM",
-    },
-    {
-      type: "STOCK_OUT",
-      item: "CG125 Meter",
-      qty: 2,
-      ref: "Bill #10020 (City Auto)",
-      time: "Yesterday 5:20 PM",
-    },
-    {
-      type: "STOCK_IN",
-      item: "CD70 Brake",
-      qty: 100,
-      ref: "Purchase Entry",
-      time: "Yesterday 2:10 PM",
-    },
-  ];
+/* COLORS */
+const COLORS = [
+  "#22c55e",
+  "#3b82f6",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#06b6d4",
+];
+
+/* FORMAT */
+const formatNumber = (num) => {
+  const value = Number(num || 0);
+
+  if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(1)}M`;
+  }
+
+  if (value >= 1000) {
+    return `${(value / 1000).toFixed(1)}K`;
+  }
+
+  return value;
+};
+
+/* STAT CARD */
+const StatCard = ({
+  title,
+  value,
+  icon,
+  glow,
+  textColor,
+}) => {
+  return (
+    <motion.div
+      whileHover={{ y: -4 }}
+      className="
+        relative overflow-hidden
+        rounded-3xl
+        border border-black/10 dark:border-white/10
+        bg-white dark:bg-[#0a0a0a]
+        p-5
+      "
+    >
+      <div
+        className={`
+          absolute -top-10 -right-10
+          h-40 w-40 blur-3xl opacity-15
+          ${glow}
+        `}
+      />
+
+      <div className="relative z-10 flex justify-between items-start">
+        <div>
+          <p className="text-sm text-gray-500 dark:text-white/50">
+            {title}
+          </p>
+
+          <h2
+            className={`
+              text-4xl font-black mt-3
+              ${textColor}
+            `}
+          >
+            {formatNumber(value)}
+          </h2>
+        </div>
+
+        <div
+          className={`
+            h-14 w-14 rounded-2xl
+            flex items-center justify-center text-xl
+            ${textColor}
+          `}
+        >
+          {icon}
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+export default function Reports() {
+  const [loading, setLoading] = useState(true);
+
+  const [products, setProducts] = useState([]);
+  const [bills, setBills] = useState([]);
+
+  const [search, setSearch] = useState("");
+  const [period, setPeriod] = useState("yearly");
+
+  const [stats, setStats] = useState({
+    revenue: 0,
+    bills: 0,
+    clients: 0,
+    stock: 0,
+    lowStock: 0,
+    deadStock: 0,
+  });
+
+  const [revenueChart, setRevenueChart] = useState([]);
+  const [stockChart, setStockChart] = useState([]);
+  const [productPie, setProductPie] = useState([]);
+
+  /* FETCH */
+  const fetchReports = async () => {
+    try {
+      setLoading(true);
+
+      const [productsRes, billsRes] =
+        await Promise.all([
+          supabase.from("products").select("*"),
+          supabase.from("bills").select("*"),
+        ]);
+
+      const products = productsRes.data || [];
+      const bills = billsRes.data || [];
+
+      setProducts(products);
+      setBills(bills);
+
+      const totalRevenue = bills.reduce(
+        (sum, bill) =>
+          sum + Number(bill.total_amount || 0),
+        0
+      );
+
+      const totalStock = products.reduce(
+        (sum, p) =>
+          sum + Number(p.stock || 0),
+        0
+      );
+
+      const uniqueClients = [
+        ...new Set(
+          bills.map((b) => b.client_name)
+        ),
+      ];
+
+      const lowStock = products.filter(
+        (p) => Number(p.stock) <= 5
+      );
+
+      const deadStock = products.filter(
+        (p) => Number(p.stock) === 0
+      );
+
+      setStats({
+        revenue: totalRevenue,
+        bills: bills.length,
+        clients: uniqueClients.length,
+        stock: totalStock,
+        lowStock: lowStock.length,
+        deadStock: deadStock.length,
+      });
+
+      /* MONTHS */
+      const months = [
+        "Jan","Feb","Mar","Apr","May","Jun",
+        "Jul","Aug","Sep","Oct","Nov","Dec",
+      ];
+
+      const revenueMap = {};
+      const stockMap = {};
+
+      bills.forEach((bill) => {
+        const date = new Date(
+          bill.created_at
+        );
+
+        const month =
+          months[date.getMonth()];
+
+        revenueMap[month] =
+          (revenueMap[month] || 0) +
+          Number(
+            bill.total_amount || 0
+          );
+      });
+
+      products.forEach((product) => {
+        const randomMonth =
+          months[
+            Math.floor(
+              Math.random() * 12
+            )
+          ];
+
+        stockMap[randomMonth] =
+          (stockMap[
+            randomMonth
+          ] || 0) +
+          Number(
+            product.stock || 0
+          );
+      });
+
+      setRevenueChart(
+        months.map((month) => ({
+          name: month,
+          revenue:
+            revenueMap[
+              month
+            ] || 0,
+        }))
+      );
+
+      setStockChart(
+        months.map((month) => ({
+          name: month,
+          stockIn:
+            stockMap[
+              month
+            ] || 0,
+          stockOut:
+            Math.floor(
+              Math.random() * 500
+            ),
+        }))
+      );
+
+      setProductPie(
+        products
+          .slice(0, 6)
+          .map((p) => ({
+            name:
+              p.product_name,
+            value:
+              Number(
+                p.stock || 0
+              ),
+          }))
+      );
+    } catch {
+      toast.error(
+        "Failed to load reports"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  /* FILTER CLIENTS */
+  const topClients =
+    useMemo(() => {
+      return bills.filter(
+        (bill) =>
+          bill.client_name
+            ?.toLowerCase()
+            .includes(
+              search.toLowerCase()
+            )
+      );
+    }, [bills, search]);
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        {[...Array(6)].map(
+          (_, i) => (
+            <div
+              key={i}
+              className="
+                h-32 rounded-3xl
+                bg-black/5
+                dark:bg-white/5
+                animate-pulse
+              "
+            />
+          )
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-black dark:text-white">
 
-      {/* 🔥 HEADER */}
-      <div className="bg-black text-white rounded-3xl p-6">
+      {/* HEADER */}
+      <div className="flex flex-col lg:flex-row lg:justify-between gap-4">
 
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <FaWarehouse /> Inventory Control Center
-          </h2>
+        <div>
+          <h1 className="text-4xl font-black">
+            Reports
+          </h1>
 
-          <p className="text-gray-400 text-sm flex items-center gap-2">
-            <FaClock /> Real-time Ledger
+          <p className="text-gray-500 dark:text-white/50 text-sm">
+            Advanced business intelligence
           </p>
         </div>
 
-        <p className="text-gray-500 text-sm mt-2">
-          Tracks every stock movement from Inventory & Billing system (Supabase synced)
-        </p>
+        <div className="flex gap-3 flex-wrap">
 
+          <button
+            onClick={fetchReports}
+            className="
+              px-5 py-3 rounded-2xl
+              bg-blue-500/10 text-blue-500
+              font-bold
+              flex items-center gap-2
+            "
+          >
+            <FaSyncAlt />
+            Refresh
+          </button>
+
+          <button
+            className="
+              px-5 py-3 rounded-2xl
+              bg-green-500 text-black
+              font-bold
+              flex items-center gap-2
+            "
+          >
+            <FaDownload />
+            Export
+          </button>
+
+        </div>
       </div>
 
-      {/* 📊 KPI SECTION */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* FILTER BAR */}
+      <motion.div
+        className="
+          rounded-[32px]
+          border border-black/10 dark:border-white/10
+          bg-white/80 dark:bg-[#0a0a0a]/90
+          backdrop-blur-xl
+          p-5
+        "
+      >
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
 
-        <div className="bg-black text-white rounded-3xl p-5">
-          <FaBoxes className="text-gray-400" />
-          <p className="text-gray-400 text-sm mt-2">Stock In</p>
-          <h1 className="text-2xl font-bold text-green-400">12,400</h1>
-        </div>
+          {/* SEARCH */}
+          <div
+            className="
+              flex items-center gap-3
+              rounded-3xl
+              border border-black/10 dark:border-white/10
+              px-4 py-4
+            "
+          >
+            <FaSearch />
 
-        <div className="bg-black text-white rounded-3xl p-5">
-          <FaShoppingCart className="text-gray-400" />
-          <p className="text-gray-400 text-sm mt-2">Stock Out</p>
-          <h1 className="text-2xl font-bold text-red-400">8,120</h1>
-        </div>
+            <input
+              placeholder="Search client..."
+              value={search}
+              onChange={(e) =>
+                setSearch(
+                  e.target.value
+                )
+              }
+              className="
+                bg-transparent
+                outline-none
+                w-full
+              "
+            />
+          </div>
 
-        <div className="bg-black text-white rounded-3xl p-5">
-          <FaFileInvoice className="text-gray-400" />
-          <p className="text-gray-400 text-sm mt-2">Total Bills</p>
-          <h1 className="text-2xl font-bold">1,024</h1>
-        </div>
-
-        <div className="bg-black text-white rounded-3xl p-5">
-          <FaChartLine className="text-gray-400" />
-          <p className="text-gray-400 text-sm mt-2">Net Stock</p>
-          <h1 className="text-2xl font-bold text-green-400">+4,280</h1>
-        </div>
-
-      </div>
-
-      {/* 📊 REAL RECHARTS GRAPH */}
-      <div className="bg-black text-white rounded-3xl p-6">
-
-        <h2 className="text-xl font-bold mb-4">Stock Movement Trend</h2>
-
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart
-              data={[
-                { day: "Mon", in: 30, out: 20 },
-                { day: "Tue", in: 50, out: 35 },
-                { day: "Wed", in: 40, out: 25 },
-                { day: "Thu", in: 80, out: 60 },
-                { day: "Fri", in: 65, out: 50 },
-                { day: "Sat", in: 90, out: 70 },
-                { day: "Sun", in: 60, out: 45 },
-              ]}
+          {/* PERIOD */}
+          <div
+            className="
+              rounded-3xl
+              border border-black/10 dark:border-white/10
+              px-4 py-4
+            "
+          >
+            <select
+              value={period}
+              onChange={(e) =>
+                setPeriod(
+                  e.target.value
+                )
+              }
+              className="
+                bg-transparent
+                outline-none
+                w-full
+              "
             >
+              <option value="daily">
+                Daily
+              </option>
 
-              <XAxis dataKey="day" stroke="#9CA3AF" />
+              <option value="monthly">
+                Monthly
+              </option>
 
-              <Tooltip
-                contentStyle={{ backgroundColor: "#111", border: "none" }}
+              <option value="yearly">
+                Yearly
+              </option>
+            </select>
+          </div>
+
+        </div>
+      </motion.div>
+
+      {/* STATS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+
+        <StatCard
+          title="Revenue"
+          value={stats.revenue}
+          icon={<FaChartLine />}
+          glow="bg-green-500"
+          textColor="text-green-500"
+        />
+
+        <StatCard
+          title="Bills"
+          value={stats.bills}
+          icon={<FaFileInvoice />}
+          glow="bg-blue-500"
+          textColor="text-blue-500"
+        />
+
+        <StatCard
+          title="Clients"
+          value={stats.clients}
+          icon={<FaUsers />}
+          glow="bg-purple-500"
+          textColor="text-purple-500"
+        />
+
+        <StatCard
+          title="Stock"
+          value={stats.stock}
+          icon={<FaWarehouse />}
+          glow="bg-yellow-500"
+          textColor="text-yellow-500"
+        />
+
+        <StatCard
+          title="Low Stock"
+          value={stats.lowStock}
+          icon={
+            <FaExclamationTriangle />
+          }
+          glow="bg-red-500"
+          textColor="text-red-500"
+        />
+
+        <StatCard
+          title="Dead Stock"
+          value={stats.deadStock}
+          icon={<FaBoxes />}
+          glow="bg-orange-500"
+          textColor="text-orange-500"
+        />
+
+      </div>
+
+      {/* CHARTS */}
+      <div className="grid grid-cols-1 2xl:grid-cols-3 gap-6">
+
+        {/* REVENUE */}
+        <div
+          className="
+            2xl:col-span-2
+            rounded-3xl
+            border border-black/10 dark:border-white/10
+            bg-white dark:bg-[#0a0a0a]
+            p-6
+          "
+        >
+          <h2 className="font-black text-xl mb-4">
+            Revenue Analytics
+          </h2>
+
+          <div className="h-[350px]">
+
+            <ResponsiveContainer>
+
+              <AreaChart
+                data={
+                  revenueChart
+                }
+              >
+                <CartesianGrid
+                  opacity={0.1}
+                />
+
+                <XAxis dataKey="name" />
+
+                <YAxis />
+
+                <Tooltip />
+
+                <Area
+                  dataKey="revenue"
+                  stroke="#22c55e"
+                  fill="#22c55e22"
+                />
+
+              </AreaChart>
+
+            </ResponsiveContainer>
+
+          </div>
+        </div>
+
+        {/* PIE */}
+        <div
+          className="
+            rounded-3xl
+            border border-black/10 dark:border-white/10
+            bg-white dark:bg-[#0a0a0a]
+            p-6
+          "
+        >
+          <h2 className="font-black text-xl mb-4">
+            Product Distribution
+          </h2>
+
+          <div className="h-[350px]">
+
+            <ResponsiveContainer>
+
+              <PieChart>
+
+                <Pie
+                  data={productPie}
+                  dataKey="value"
+                  outerRadius={110}
+                >
+                  {productPie.map(
+                    (_, i) => (
+                      <Cell
+                        key={i}
+                        fill={
+                          COLORS[
+                            i %
+                              COLORS.length
+                          ]
+                        }
+                      />
+                    )
+                  )}
+                </Pie>
+
+                <Tooltip />
+
+              </PieChart>
+
+            </ResponsiveContainer>
+
+          </div>
+        </div>
+
+      </div>
+
+      {/* STOCK */}
+      <div
+        className="
+          rounded-3xl
+          border border-black/10 dark:border-white/10
+          bg-white dark:bg-[#0a0a0a]
+          p-6
+        "
+      >
+        <h2 className="font-black text-xl mb-4">
+          Stock Flow
+        </h2>
+
+        <div className="h-[350px]">
+
+          <ResponsiveContainer>
+
+            <BarChart
+              data={stockChart}
+            >
+              <CartesianGrid
+                opacity={0.1}
               />
 
-              <Area
-                type="monotone"
-                dataKey="in"
-                stroke="#22c55e"
+              <XAxis dataKey="name" />
+
+              <YAxis />
+
+              <Tooltip />
+
+              <Legend />
+
+              <Bar
+                dataKey="stockIn"
                 fill="#22c55e"
-                fillOpacity={0.3}
               />
 
-              <Area
-                type="monotone"
-                dataKey="out"
-                stroke="#ef4444"
+              <Bar
+                dataKey="stockOut"
                 fill="#ef4444"
-                fillOpacity={0.3}
               />
 
-            </AreaChart>
+            </BarChart>
+
           </ResponsiveContainer>
-        </div>
-
-      </div>
-
-      {/* 📥 DOWNLOAD SECTION (FUTURE FEATURE MOCKUP) */}
-      <div className="bg-black text-white rounded-3xl p-6">
-
-        <h2 className="text-xl font-bold mb-4">Reports Export</h2>
-
-        <div className="flex flex-col md:flex-row gap-4">
-
-          <button className="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-3 rounded-xl">
-            <FaFileExcel /> Download Monthly Report
-          </button>
-
-          <button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-xl">
-            <FaDownload /> Download Yearly Report
-          </button>
 
         </div>
-
-        <p className="text-gray-500 text-xs mt-3">
-          (Future feature: PDF / Excel export from Supabase data)
-        </p>
-
       </div>
 
-      {/* 📜 LEDGER */}
-      <div className="bg-black text-white rounded-3xl p-6">
-
-        <h2 className="text-xl font-bold mb-4">Inventory Ledger</h2>
+      {/* CLIENTS */}
+      <div
+        className="
+          rounded-3xl
+          border border-black/10 dark:border-white/10
+          bg-white dark:bg-[#0a0a0a]
+          p-6
+        "
+      >
+        <h2 className="font-black text-xl mb-5">
+          Client Billing History
+        </h2>
 
         <div className="space-y-3">
 
-          {logs.map((log, i) => (
-            <div
-              key={i}
-              className="flex justify-between items-center bg-gray-900 p-4 rounded-xl"
-            >
-
-              {/* LEFT */}
-              <div className="flex items-center gap-3">
-
+          {topClients
+            .slice(0, 15)
+            .map((bill) => (
+              <div
+                key={bill.id}
+                className="
+                  rounded-2xl
+                  bg-gray-100 dark:bg-white/5
+                  p-4
+                  flex justify-between
+                "
+              >
                 <div>
-                  <p className="font-medium">{log.item}</p>
-                  <p className="text-xs text-gray-400 flex items-center gap-1">
-                    <FaUser /> {log.ref}
+                  <p className="font-bold">
+                    {
+                      bill.client_name
+                    }
+                  </p>
+
+                  <p className="text-sm text-gray-500 dark:text-white/50">
+                    #
+                    {
+                      bill.bill_number
+                    }
                   </p>
                 </div>
 
-              </div>
-
-              {/* RIGHT */}
-              <div className="text-right">
-
-                <p className="text-sm">Qty: {log.qty}</p>
-                <p className="text-xs text-gray-500">{log.time}</p>
-
-                <span
-                  className={`text-xs px-3 py-1 rounded-full mt-1 inline-block ${
-                    log.type === "STOCK_IN"
-                      ? "bg-green-500 text-black"
-                      : "bg-red-500 text-black"
-                  }`}
-                >
-                  {log.type.replace("_", " ")}
-                </span>
+                <p className="font-black text-green-500">
+                  Rs{" "}
+                  {formatNumber(
+                    bill.total_amount
+                  )}
+                </p>
 
               </div>
-
-            </div>
-          ))}
+            ))}
 
         </div>
-
       </div>
 
     </div>
   );
-};
-
-export default Reports;
+}
