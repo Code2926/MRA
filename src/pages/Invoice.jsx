@@ -207,11 +207,11 @@ const Invoice = () => {
 
             <p style={companyText}>
               {settings?.address ||
-                "Charagh Street, 78 McLeod Rd, Lahore, Pakistan"}
+                "Charagh Street, 78 McLeod Road, Lahore, Pakistan"}
             </p>
 
             <p style={companyText}>
-              Phone: {settings?.phone || "0303-9144304, 0321-4300543"}
+              Phone: {settings?.phone || "0303 9144304 | 0321 4300543"}
             </p>
           </div>
 
