@@ -11,6 +11,7 @@ import {
   FaSyncAlt,
   FaFileInvoice,
   FaRupeeSign,
+  FaMoneyBillWave
 } from "react-icons/fa";
 
 import {
@@ -282,10 +283,11 @@ export default function Dashboard() {
         <Card
           title="Revenue"
           value={stats.totalSales}
-          icon={<span className="font-bold">Rs</span>}
+          icon={<FaMoneyBillWave />}
           trend="+24%"
-          iconBg="bg-yellow-500/15"
-          iconColor="text-yellow-500"
+          color="bg-green-500"
+          iconBg="bg-green-500/15"
+          iconColor="text-green-500"
         />
 
         <Card
