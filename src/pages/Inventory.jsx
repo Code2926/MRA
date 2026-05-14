@@ -291,7 +291,6 @@ export default function Inventory() {
               </h2>
               {/* ADD THIS - TREND INDICATOR */}
               <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-xs font-bold text-red-500">
-                <FaExclamationTriangle />
                 Alert
               </div>
             </div>
