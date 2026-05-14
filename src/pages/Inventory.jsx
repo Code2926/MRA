@@ -173,7 +173,7 @@ export default function Inventory() {
 
   const totalStock = items.reduce((sum, item) => sum + Number(item.stock || 0), 0);
 
-  const LOW_STOCK_THRESHOLD = 10;
+  const LOW_STOCK_THRESHOLD = 99;
 
   const getStockStatus = (stock) => {
     const s = Number(stock || 0);
