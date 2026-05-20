@@ -315,9 +315,15 @@ export default function Reports() {
     (p) => !billItems.find((i) => i.product_id === p.id)
   ).length;
 
-  const mostProfitable =
-    [...productPerformance].sort((a, b) => b.revenue - a.revenue)[0]
-      ?.product_name || "N/A";
+  const profitableProducts = productPerformance.filter(
+  (p) => Number(p.revenue || 0) > 0
+);
+
+const mostProfitable =
+  profitableProducts.length > 0
+    ? profitableProducts.sort((a, b) => b.revenue - a.revenue)[0]
+        ?.product_name
+    : "N/A";
 
   const bikeRevenue = {};
   billItems.forEach((item) => {
